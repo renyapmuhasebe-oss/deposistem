@@ -60,7 +60,7 @@ menu = st.sidebar.selectbox("Bölümler",
 
 # ================= ANA SAYFA (DASHBOARD) =================
 if menu == "🏠 Ana Sayfa":
-    st.title("👋 Hoş Geldiniz, Renyap Depo Yönetimi")
+    st.title("👋Renyap Depo Yönetimi")
     st.markdown("### Depo Durum Özeti")
     
     toplam_cesit = len(st.session_state.envanter)
@@ -218,4 +218,5 @@ elif menu == "📈 Analiz Bölümü":
             st.metric("TL Karşılığı", f"{tl:,.2f} ₺")
 
 st.sidebar.markdown("---")
+
 st.sidebar.markdown("🌐 [www.renyap.com](https://www.renyap.com)")
