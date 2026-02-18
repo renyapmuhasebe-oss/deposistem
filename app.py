@@ -7,16 +7,18 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (BUTONLAR İNCELDİ) ---
+# --- TASARIM (MOBİL MENÜ DÜZELTİLDİ) ---
 st.markdown("""
     <style>
-        /* GİZLEME KOMUTLARI */
-        #MainMenu {visibility: hidden;}
-        header {visibility: hidden;}
-        footer {visibility: hidden;}
-        .stDeployButton {display:none;}
+        /* --- GİZLEME AYARLARI (GÜNCELLENDİ) --- */
+        #MainMenu {visibility: hidden;} /* Sağ üstteki 3 nokta gizli */
+        footer {visibility: hidden;}    /* Alttaki 'Manage app' gizli */
+        .stDeployButton {display:none;} /* Deploy butonu gizli */
         
-        /* GENEL RENKLER */
+        /* DİKKAT: 'header {visibility: hidden;}' kodu SİLİNDİ. */
+        /* Bu sayede mobilde menü açma butonu (>) görünür olacak. */
+
+        /* --- GENEL RENKLER --- */
         .stApp { background-color: #FFFFFF; }
         section[data-testid="stSidebar"] {
             background-color: #FFFFFF; 
@@ -32,25 +34,24 @@ st.markdown("""
             color: #000000 !important; 
         }
 
-        /* --- BUTON TASARIMI (GÜNCELLENDİ) --- */
-        /* Tüm butonlar: İnce Kırmızı Çerçeve, Siyah Yazı */
+        /* --- BUTON TASARIMI (İNCE KIRMIZI ÇERÇEVE) --- */
         div.stButton > button, div.stDownloadButton > button {
-            background-color: #FFFFFF !important; /* İçi Beyaz */
-            color: #000000 !important; /* Yazı Siyah */
-            border: 1px solid #C00000 !important; /* İNCE (1px) Kırmızı Çerçeve */
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: 1px solid #C00000 !important; /* İnce Kırmızı */
             border-radius: 8px;
-            font-weight: 600; /* Biraz kalın yazı */
+            font-weight: 600;
             transition: all 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
-        /* Butonun Üzerine Gelince (Hover) */
+        /* Hover (Üzerine Gelince) */
         div.stButton > button:hover, div.stDownloadButton > button:hover {
-            background-color: #C00000 !important; /* İçi Kırmızı Olsun */
-            color: #FFFFFF !important; /* Yazı Beyaz Olsun */
+            background-color: #C00000 !important;
+            color: #FFFFFF !important;
             border-color: #C00000 !important;
             cursor: pointer;
-            transform: translateY(-1px); /* Hafif yukarı kalkma efekti */
+            transform: translateY(-1px);
         }
 
         /* INPUT ALANLARI */
@@ -60,7 +61,7 @@ st.markdown("""
             color: #000000 !important;
         }
         .stTextInput input:focus, .stNumberInput input:focus {
-            border-color: #C00000 !important; /* Odaklanınca Kırmızı */
+            border-color: #C00000 !important;
             box-shadow: 0 0 0 1px #C00000;
         }
 
