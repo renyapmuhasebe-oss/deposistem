@@ -2,63 +2,57 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import os
-from PIL import Image
+import base64
 
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (ÖZEL CSS İLE RENK DÜZELTMESİ) ---
+# --- TASARIM (BEYAZ SIDEBAR & MENÜ) ---
 st.markdown("""
     <style>
-        /* GENEL SAYFA RENGİ */
+        /* GENEL SAYFA */
         .stApp { background-color: #FFFFFF; }
         
-        /* SOL MENÜ (SIDEBAR) ARKA PLANI - Hafif Gri */
+        /* SOL MENÜ (SIDEBAR) - TAMAMEN BEYAZ */
         section[data-testid="stSidebar"] {
-            background-color: #eaPgf1; 
-            border-right: 2px solid #d1d5db;
+            background-color: #FFFFFF; 
+            border-right: 1px solid #e5e7eb; /* İnce gri çizgi */
         }
         
-        /* YAZI RENKLERİ - Zorla Siyah Yap */
-        h1, h2, h3, h4, h5, h6, .streamlit-expanderHeader, label, .stMarkdown, p { 
+        /* YAZI RENKLERİ - SİYAH */
+        h1, h2, h3, h4, h5, h6, label, .stMarkdown, p, span { 
             color: #000000 !important; 
         }
         
-        /* METRİKLER (Sayılar) */
-        [data-testid="stMetricValue"] { color: #000000 !important; }
-        [data-testid="stMetricLabel"] { color: #333333 !important; }
-
-        /* --- SOL MENÜ BUTON TASARIMI --- */
-        /* Radyo butonlarının yazılarını kutu içine al */
+        /* MENÜ BUTONLARI (RADYO) */
         .stRadio label {
-            background-color: #FFFFFF; /* Kutucuk Arka Planı Beyaz */
-            color: #000000 !important; /* Yazı Rengi Siyah */
+            background-color: #F9FAFB; /* Çok açık gri buton */
+            color: #000000 !important;
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid #cccccc;
-            margin-bottom: 8px;
-            font-weight: bold !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 5px;
+            font-weight: 600 !important;
+            transition: all 0.2s ease;
         }
 
-        /* Üzerine gelince (Hover) */
+        /* Hover (Üzerine Gelince) */
         .stRadio label:hover {
-            border-color: #0d6efd;
-            background-color: #f0f7ff;
-            color: #0d6efd !important;
+            background-color: #EFF6FF; /* Açık Mavi */
+            border-color: #3B82F6;
+            color: #1D4ED8 !important;
+            cursor: pointer;
         }
 
-        /* Link Rengi */
-        a { color: #0d6efd !important; text-decoration: none; font-weight: bold; }
+        /* Linkler */
+        a { color: #2563EB !important; text-decoration: none; font-weight: bold; }
         
-        /* Dashboard Kartları */
+        /* Kart Tasarımları */
         div[data-testid="column"] {
-            background-color: #f8f9fa; 
-            border-radius: 10px; 
+            background-color: #F9FAFB; 
+            border-radius: 12px; 
             padding: 20px; 
-            border: 1px solid #dee2e6;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -81,7 +75,7 @@ if 'iade' not in st.session_state:
     if os.path.exists(FILE_IADE): st.session_state.iade = pd.read_excel(FILE_IADE)
     else: st.session_state.iade = pd.DataFrame(columns=["Müşteri Adı", "Ürün Adı", "Sipariş No", "Adet", "Hasar Durumu", "Tarih"])
 
-# --- KAYIT VE STOK FONKSİYONLARI ---
+# --- KAYIT VE FONKSİYONLAR ---
 def verileri_kaydet():
     st.session_state.envanter.to_excel(FILE_ENVANTER, index=False)
     st.session_state.tedarik.to_excel(FILE_TEDARIK, index=False)
@@ -99,32 +93,38 @@ def stok_guncelle(urun_adi, adet, islem_tipi="ekle"):
             return True
     return False
 
-# --- LOGO VE MENÜ YÖNETİMİ ---
+# --- LOGO İŞLEMLERİ (HTML İLE TIKLANABİLİR YAPMA) ---
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
 if 'sayfa' not in st.session_state:
     st.session_state.sayfa = "🏠 Ana Sayfa"
 
+# Logoyu Göster ve Linkle
 if os.path.exists("logo.jpeg"):
     try:
-        st.sidebar.image(Image.open("logo.jpeg"), use_container_width=True)
-        # Buton stilini de düzeltelim
-        if st.sidebar.button("🏠 Ana Sayfaya Dön", type="primary", use_container_width=True):
-            st.session_state.sayfa = "🏠 Ana Sayfa"
-            st.rerun()
-    except: pass
+        img_str = get_base64_image("logo.jpeg")
+        # HTML Linki: Tıklayınca sayfayı yeniler (href="_self") ve Ana Sayfaya döner
+        logo_html = f'''
+        <a href="" target="_self">
+            <img src="data:image/jpeg;base64,{img_str}" width="100%" style="border-radius:10px; margin-bottom:20px;">
+        </a>
+        '''
+        st.sidebar.markdown(logo_html, unsafe_allow_html=True)
+    except:
+        st.sidebar.warning("Logo Hatası")
 
-st.sidebar.write("") # Boşluk
-
-# Menü Seçenekleri
+# MENÜ SEÇENEKLERİ
 secenekler = ["🏠 Ana Sayfa", "📋 Envanter", "🚚 Tedarik", "↩️ İade", "📈 Analiz"]
 
-# Hangi seçenekte olduğumuzu bul
+# Radyo Buton
 try: index_no = secenekler.index(st.session_state.sayfa)
 except: index_no = 0
 
-# Radyo Buton Menüsü
 menu = st.sidebar.radio("MENÜ", secenekler, index=index_no, label_visibility="collapsed")
 
-# Sayfa Değişimi Kontrolü
+# Sayfa Değişimi
 if menu != st.session_state.sayfa:
     st.session_state.sayfa = menu
     st.rerun()
