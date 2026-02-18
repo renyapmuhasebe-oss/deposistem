@@ -7,7 +7,7 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (BUTONLAR GÜNCELLENDİ) ---
+# --- TASARIM (BUTONLAR İNCELDİ) ---
 st.markdown("""
     <style>
         /* GİZLEME KOMUTLARI */
@@ -32,15 +32,16 @@ st.markdown("""
             color: #000000 !important; 
         }
 
-        /* --- BUTON TASARIMI (YENİ) --- */
-        /* Hem normal butonlar hem de 'Excel İndir' butonu için */
+        /* --- BUTON TASARIMI (GÜNCELLENDİ) --- */
+        /* Tüm butonlar: İnce Kırmızı Çerçeve, Siyah Yazı */
         div.stButton > button, div.stDownloadButton > button {
             background-color: #FFFFFF !important; /* İçi Beyaz */
             color: #000000 !important; /* Yazı Siyah */
-            border: 2px solid #C00000 !important; /* Çerçeve Kırmızı */
+            border: 1px solid #C00000 !important; /* İNCE (1px) Kırmızı Çerçeve */
             border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            font-weight: 600; /* Biraz kalın yazı */
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         /* Butonun Üzerine Gelince (Hover) */
@@ -49,6 +50,7 @@ st.markdown("""
             color: #FFFFFF !important; /* Yazı Beyaz Olsun */
             border-color: #C00000 !important;
             cursor: pointer;
+            transform: translateY(-1px); /* Hafif yukarı kalkma efekti */
         }
 
         /* INPUT ALANLARI */
@@ -58,7 +60,7 @@ st.markdown("""
             color: #000000 !important;
         }
         .stTextInput input:focus, .stNumberInput input:focus {
-            border-color: #C00000 !important; /* Tıklayınca Kırmızı Çerçeve */
+            border-color: #C00000 !important; /* Odaklanınca Kırmızı */
             box-shadow: 0 0 0 1px #C00000;
         }
 
@@ -74,7 +76,7 @@ st.markdown("""
             transition: all 0.2s ease;
         }
         .stRadio label:hover {
-            background-color: #fff5f5; /* Çok açık kırmızımsı */
+            background-color: #fff5f5;
             color: #C00000 !important;
             border-color: #C00000;
             cursor: pointer;
