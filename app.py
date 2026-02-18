@@ -7,26 +7,40 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (BEYAZ SIDEBAR & MENÜ) ---
+# --- TASARIM (FULL BEYAZ TEMA) ---
 st.markdown("""
     <style>
-        /* GENEL SAYFA */
+        /* GENEL ARKA PLAN */
         .stApp { background-color: #FFFFFF; }
         
-        /* SOL MENÜ (SIDEBAR) - TAMAMEN BEYAZ */
+        /* SIDEBAR (SOL MENÜ) */
         section[data-testid="stSidebar"] {
             background-color: #FFFFFF; 
-            border-right: 1px solid #e5e7eb; /* İnce gri çizgi */
+            border-right: 1px solid #e5e7eb;
         }
         
         /* YAZI RENKLERİ - SİYAH */
-        h1, h2, h3, h4, h5, h6, label, .stMarkdown, p, span { 
+        h1, h2, h3, h4, h5, h6, label, .stMarkdown, p, span, div { 
             color: #000000 !important; 
         }
         
-        /* MENÜ BUTONLARI (RADYO) */
+        /* INPUT ALANLARI VE KOLONLAR (BEYAZ YAPILDI) */
+        div[data-testid="column"] {
+            background-color: #FFFFFF; /* Burası Griydi, Beyaz Oldu */
+            border-radius: 12px; 
+            padding: 20px; 
+            border: 1px solid #e5e7eb; /* İnce çerçeve */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); /* Çok hafif gölge */
+        }
+
+        /* TABLOLAR (DATAFRAME) */
+        [data-testid="stDataFrame"] {
+            background-color: #FFFFFF;
+        }
+
+        /* MENÜ BUTONLARI */
         .stRadio label {
-            background-color: #F9FAFB; /* Çok açık gri buton */
+            background-color: #FFFFFF;
             color: #000000 !important;
             padding: 12px;
             border-radius: 8px;
@@ -38,7 +52,7 @@ st.markdown("""
 
         /* Hover (Üzerine Gelince) */
         .stRadio label:hover {
-            background-color: #EFF6FF; /* Açık Mavi */
+            background-color: #f3f4f6;
             border-color: #3B82F6;
             color: #1D4ED8 !important;
             cursor: pointer;
@@ -46,14 +60,6 @@ st.markdown("""
 
         /* Linkler */
         a { color: #2563EB !important; text-decoration: none; font-weight: bold; }
-        
-        /* Kart Tasarımları */
-        div[data-testid="column"] {
-            background-color: #F9FAFB; 
-            border-radius: 12px; 
-            padding: 20px; 
-            border: 1px solid #e5e7eb;
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -93,7 +99,7 @@ def stok_guncelle(urun_adi, adet, islem_tipi="ekle"):
             return True
     return False
 
-# --- LOGO İŞLEMLERİ (HTML İLE TIKLANABİLİR YAPMA) ---
+# --- LOGO İŞLEMLERİ ---
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
@@ -101,11 +107,10 @@ def get_base64_image(image_path):
 if 'sayfa' not in st.session_state:
     st.session_state.sayfa = "🏠 Ana Sayfa"
 
-# Logoyu Göster ve Linkle
 if os.path.exists("logo.jpeg"):
     try:
         img_str = get_base64_image("logo.jpeg")
-        # HTML Linki: Tıklayınca sayfayı yeniler (href="_self") ve Ana Sayfaya döner
+        # Logoya tıklayınca Ana Sayfaya döner
         logo_html = f'''
         <a href="" target="_self">
             <img src="data:image/jpeg;base64,{img_str}" width="100%" style="border-radius:10px; margin-bottom:20px;">
@@ -118,13 +123,11 @@ if os.path.exists("logo.jpeg"):
 # MENÜ SEÇENEKLERİ
 secenekler = ["🏠 Ana Sayfa", "📋 Envanter", "🚚 Tedarik", "↩️ İade", "📈 Analiz"]
 
-# Radyo Buton
 try: index_no = secenekler.index(st.session_state.sayfa)
 except: index_no = 0
 
 menu = st.sidebar.radio("MENÜ", secenekler, index=index_no, label_visibility="collapsed")
 
-# Sayfa Değişimi
 if menu != st.session_state.sayfa:
     st.session_state.sayfa = menu
     st.rerun()
@@ -234,7 +237,7 @@ elif st.session_state.sayfa == "📈 Analiz":
             net = satis - kesinti - alis
             color = "green" if net > 0 else "red"
             st.metric("Ciro", f"{satis-kesinti:.2f} TL")
-            st.markdown(f"<div style='background-color:#f8f9fa; padding:15px; border-left:5px solid {color};'><h3 style='color:{color}; margin:0;'>Net Kar: {net:.2f} TL</h3></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background-color:#FFFFFF; padding:15px; border-left:5px solid {color}; border:1px solid #e5e7eb; border-radius:10px;'><h3 style='color:{color}; margin:0;'>Net Kar: {net:.2f} TL</h3></div>", unsafe_allow_html=True)
     with t2:
         kur = st.number_input("Kur", 32.50)
         fiyat = st.number_input("Fiyat ($)", 100.0)
