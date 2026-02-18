@@ -7,59 +7,62 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (GİZLEME KOMUTLARI EKLENDİ) ---
+# --- TASARIM (BUTONLAR GÜNCELLENDİ) ---
 st.markdown("""
     <style>
-        /* --- İSTENMEYEN ELEMENTLERİ GİZLEME (YENİ) --- */
-        #MainMenu {visibility: hidden;} /* Sağ üstteki 3 nokta menüsü */
-        header {visibility: hidden;}    /* En tepedeki boşluk ve Deploy butonu */
-        footer {visibility: hidden;}    /* Sağ alttaki 'Manage app' yazısı */
-        .stDeployButton {display:none;} /* Deploy butonu */
+        /* GİZLEME KOMUTLARI */
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .stDeployButton {display:none;}
         
-        /* --- RENYAP KURUMSAL TASARIM --- */
+        /* GENEL RENKLER */
         .stApp { background-color: #FFFFFF; }
-        
         section[data-testid="stSidebar"] {
             background-color: #FFFFFF; 
             border-right: 1px solid #e5e7eb;
         }
         
-        /* Başlıklar ve Yazılar */
+        /* BAŞLIKLAR (LACİVERT) */
         h1, h2, h3, h4, h5, h6 { 
-            color: #203864 !important; /* Renyap Laciverti */
+            color: #203864 !important; 
             font-weight: 700 !important;
         }
         label, .stMarkdown, p, span, div { 
             color: #000000 !important; 
         }
 
-        /* Input Alanları - Beyaz */
+        /* --- BUTON TASARIMI (YENİ) --- */
+        /* Hem normal butonlar hem de 'Excel İndir' butonu için */
+        div.stButton > button, div.stDownloadButton > button {
+            background-color: #FFFFFF !important; /* İçi Beyaz */
+            color: #000000 !important; /* Yazı Siyah */
+            border: 2px solid #C00000 !important; /* Çerçeve Kırmızı */
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        /* Butonun Üzerine Gelince (Hover) */
+        div.stButton > button:hover, div.stDownloadButton > button:hover {
+            background-color: #C00000 !important; /* İçi Kırmızı Olsun */
+            color: #FFFFFF !important; /* Yazı Beyaz Olsun */
+            border-color: #C00000 !important;
+            cursor: pointer;
+        }
+
+        /* INPUT ALANLARI */
         .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] div {
             background-color: #FFFFFF !important;
             border: 1px solid #ced4da;
             color: #000000 !important;
         }
         .stTextInput input:focus, .stNumberInput input:focus {
-            border-color: #203864 !important;
-            box-shadow: 0 0 0 1px #203864;
+            border-color: #C00000 !important; /* Tıklayınca Kırmızı Çerçeve */
+            box-shadow: 0 0 0 1px #C00000;
         }
 
-        /* Butonlar */
-        div.stButton > button {
-            background-color: #203864;
-            color: #FFFFFF !important;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        div.stButton > button:hover {
-            background-color: #FFC000; /* Renyap Sarısı */
-            color: #203864 !important;
-            border: 1px solid #203864;
-        }
-
-        /* Menü Butonları */
+        /* MENÜ VE KARTLAR */
         .stRadio label {
             background-color: #FFFFFF;
             color: #203864 !important;
@@ -71,13 +74,12 @@ st.markdown("""
             transition: all 0.2s ease;
         }
         .stRadio label:hover {
-            background-color: #FFC000;
-            color: #203864 !important;
-            border-color: #203864;
+            background-color: #fff5f5; /* Çok açık kırmızımsı */
+            color: #C00000 !important;
+            border-color: #C00000;
             cursor: pointer;
         }
-
-        /* Tablolar ve Kartlar */
+        
         [data-testid="stDataFrame"] { background-color: #FFFFFF; }
         div[data-testid="column"] {
             background-color: #FFFFFF; 
@@ -87,15 +89,12 @@ st.markdown("""
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* Linkler ve Metrikler */
+        /* Linkler */
         a { color: #C00000 !important; text-decoration: none; font-weight: bold; }
         [data-testid="stMetricLabel"] { color: #203864 !important; }
         [data-testid="stMetricValue"] { color: #203864 !important; }
 
-        /* Üst boşluğu azalt (Header gidince boşluk kalmasın) */
-        .block-container {
-            padding-top: 1rem;
-        }
+        .block-container { padding-top: 1rem; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -135,7 +134,7 @@ def stok_guncelle(urun_adi, adet, islem_tipi="ekle"):
             return True
     return False
 
-# --- LOGO (TIKLANABİLİR) ---
+# --- LOGO ---
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
