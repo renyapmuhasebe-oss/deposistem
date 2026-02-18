@@ -7,7 +7,7 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (FULL BEYAZ TEMA) ---
+# --- TASARIM (FULL BEYAZ TEMA & BEYAZ INPUTLAR) ---
 st.markdown("""
     <style>
         /* GENEL ARKA PLAN */
@@ -24,19 +24,30 @@ st.markdown("""
             color: #000000 !important; 
         }
         
-        /* INPUT ALANLARI VE KOLONLAR (BEYAZ YAPILDI) */
+        /* INPUT ALANLARI (GİRİŞ KUTUCUKLARI) - BEYAZ YAPILDI */
+        .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] div {
+            background-color: #FFFFFF !important; /* Arka plan Beyaz */
+            border: 1px solid #ced4da; /* İnce Gri Çerçeve */
+            color: #000000 !important; /* Yazı Siyah */
+        }
+        
+        /* Inputlara Tıklayınca Mavi Çerçeve */
+        .stTextInput input:focus, .stNumberInput input:focus {
+            border-color: #2563EB !important;
+            box-shadow: 0 0 0 1px #2563EB;
+        }
+
+        /* KOLONLAR (KUTULAR) */
         div[data-testid="column"] {
-            background-color: #FFFFFF; /* Burası Griydi, Beyaz Oldu */
+            background-color: #FFFFFF; 
             border-radius: 12px; 
             padding: 20px; 
-            border: 1px solid #e5e7eb; /* İnce çerçeve */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02); /* Çok hafif gölge */
+            border: 1px solid #e5e7eb; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
 
         /* TABLOLAR (DATAFRAME) */
-        [data-testid="stDataFrame"] {
-            background-color: #FFFFFF;
-        }
+        [data-testid="stDataFrame"] { background-color: #FFFFFF; }
 
         /* MENÜ BUTONLARI */
         .stRadio label {
@@ -50,7 +61,7 @@ st.markdown("""
             transition: all 0.2s ease;
         }
 
-        /* Hover (Üzerine Gelince) */
+        /* Hover */
         .stRadio label:hover {
             background-color: #f3f4f6;
             border-color: #3B82F6;
@@ -110,7 +121,6 @@ if 'sayfa' not in st.session_state:
 if os.path.exists("logo.jpeg"):
     try:
         img_str = get_base64_image("logo.jpeg")
-        # Logoya tıklayınca Ana Sayfaya döner
         logo_html = f'''
         <a href="" target="_self">
             <img src="data:image/jpeg;base64,{img_str}" width="100%" style="border-radius:10px; margin-bottom:20px;">
@@ -195,51 +205,4 @@ elif st.session_state.sayfa == "🚚 Tedarik":
                 st.session_state.tedarik = pd.concat([st.session_state.tedarik, yeni], ignore_index=True)
                 stok_guncelle(urn, adet, "ekle")
                 st.success("Kaydedildi")
-        st.divider()
-        st.dataframe(st.session_state.tedarik.sort_index(ascending=False), use_container_width=True)
-    else: st.warning("Önce ürün ekleyin.")
-
-# ================= İADE =================
-elif st.session_state.sayfa == "↩️ İade":
-    st.header("↩️ İade İşlemleri")
-    if not st.session_state.envanter.empty:
-        c1, c2 = st.columns(2)
-        with c1:
-            with st.form("iad"):
-                mus = st.text_input("Müşteri")
-                sip = st.text_input("Sipariş No")
-                urn = st.selectbox("Ürün", st.session_state.envanter["Ürün Adı"].unique())
-                adet = st.number_input("Adet", min_value=1)
-                hasar = st.selectbox("Durum", ["Hasarsız", "Hasarlı"])
-                ekle = st.checkbox("Stoğa Ekle", value=True)
-                if st.form_submit_button("Kaydet") and mus:
-                    yeni = pd.DataFrame({"Müşteri Adı": [mus], "Ürün Adı": [urn], "Sipariş No": [sip], "Adet": [adet], "Hasar Durumu": [hasar], "Tarih": [datetime.now().strftime("%d-%m-%Y")]})
-                    st.session_state.iade = pd.concat([st.session_state.iade, yeni], ignore_index=True)
-                    if ekle: stok_guncelle(urn, adet, "ekle")
-                    verileri_kaydet()
-                    st.success("Kaydedildi")
-        with c2: st.dataframe(st.session_state.iade.sort_index(ascending=False), use_container_width=True)
-    else: st.warning("Önce ürün ekleyin.")
-
-# ================= ANALİZ =================
-elif st.session_state.sayfa == "📈 Analiz":
-    st.header("📈 Analiz")
-    t1, t2 = st.tabs(["💰 Pazaryeri", "💱 Döviz"])
-    with t1:
-        c1, c2 = st.columns(2)
-        with c1:
-            alis = st.number_input("Alış", 100.0)
-            satis = st.number_input("Satış", 250.0)
-            kargo = st.number_input("Kargo", 40.0)
-            kom = st.number_input("Komisyon %", 20.0)
-        with c2:
-            kesinti = satis * (kom/100) + kargo
-            net = satis - kesinti - alis
-            color = "green" if net > 0 else "red"
-            st.metric("Ciro", f"{satis-kesinti:.2f} TL")
-            st.markdown(f"<div style='background-color:#FFFFFF; padding:15px; border-left:5px solid {color}; border:1px solid #e5e7eb; border-radius:10px;'><h3 style='color:{color}; margin:0;'>Net Kar: {net:.2f} TL</h3></div>", unsafe_allow_html=True)
-    with t2:
-        kur = st.number_input("Kur", 32.50)
-        fiyat = st.number_input("Fiyat ($)", 100.0)
-        isk = st.number_input("İskonto %", 10.0)
-        st.metric("TL Maliyet", f"{(fiyat - (fiyat*isk/100)) * kur:.2f} ₺")
+        st.
