@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import os
+from PIL import Image
 
 # --- AYARLAR VE BAŞLIK ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM AYARLARI (BEYAZ TEMA & KART TASARIMLARI) ---
+# --- TASARIM AYARLARI ---
 st.markdown("""
     <style>
         .stApp { background-color: #FFFFFF; }
@@ -15,34 +16,58 @@ st.markdown("""
         [data-testid="stMetricValue"] { color: #000000 !important; }
         [data-testid="stMetricLabel"] { color: #6c757d !important; }
         a { color: #0d6efd !important; text-decoration: none; }
-        
-        /* Dashboard Kartları İçin Stil */
         div[data-testid="column"] {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            border: 1px solid #dee2e6;
+            background-color: #f8f9fa; border-radius: 10px; padding: 15px; border: 1px solid #dee2e6;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- LOGO VE BAŞLIK ALANI ---
+# --- DOSYA İSİMLERİ ---
+FILE_ENVANTER = "envanter.xlsx"
+FILE_TEDARIK = "tedarik.xlsx"
+FILE_IADE = "iade.xlsx"
+
+# --- VERİ YÜKLEME VE KAYDETME FONKSİYONLARI ---
+def verileri_yukle():
+    """Excel dosyaları varsa yükler, yoksa boş DataFrame oluşturur."""
+    # Envanter
+    if os.path.exists(FILE_ENVANTER):
+        st.session_state.envanter = pd.read_excel(FILE_ENVANTER)
+    elif 'envanter' not in st.session_state:
+        st.session_state.envanter = pd.DataFrame(columns=["Ürün Adı", "Ürün Kodu", "Tedarikçi Blok", "Güncel Stok"])
+        
+    # Tedarik
+    if os.path.exists(FILE_TEDARIK):
+        st.session_state.tedarik = pd.read_excel(FILE_TEDARIK)
+    elif 'tedarik' not in st.session_state:
+        st.session_state.tedarik = pd.DataFrame(columns=["Stok Adı", "Stok Kodu", "Adet", "Tedarikçi", "Tarih"])
+        
+    # İade
+    if os.path.exists(FILE_IADE):
+        st.session_state.iade = pd.read_excel(FILE_IADE)
+    elif 'iade' not in st.session_state:
+        st.session_state.iade = pd.DataFrame(columns=["Müşteri Adı", "Ürün Adı", "Sipariş No", "Adet", "Hasar Durumu", "Tarih"])
+
+def verileri_kaydet():
+    """Tüm tabloları Excel'e kaydeder."""
+    st.session_state.envanter.to_excel(FILE_ENVANTER, index=False)
+    st.session_state.tedarik.to_excel(FILE_TEDARIK, index=False)
+    st.session_state.iade.to_excel(FILE_IADE, index=False)
+
+# Program açılışında verileri yükle
+verileri_yukle()
+
+# --- LOGO ALANI ---
 if os.path.exists("logo.jpeg"):
-    st.sidebar.image("logo.jpeg", use_container_width=True)
-else:
-    st.sidebar.warning("Logo bulunamadı.")
+    try:
+        image = Image.open("logo.jpeg")
+        st.sidebar.image(image, use_container_width=True)
+    except:
+        st.sidebar.warning("Logo yüklenemedi.")
 
 st.sidebar.title("Menü")
 
-# --- VERİ TABANI SİMÜLASYONU ---
-if 'envanter' not in st.session_state:
-    st.session_state.envanter = pd.DataFrame(columns=["Ürün Adı", "Ürün Kodu", "Tedarikçi Blok", "Güncel Stok"])
-if 'tedarik' not in st.session_state:
-    st.session_state.tedarik = pd.DataFrame(columns=["Stok Adı", "Stok Kodu", "Adet", "Tedarikçi", "Tarih"])
-if 'iade' not in st.session_state:
-    st.session_state.iade = pd.DataFrame(columns=["Müşteri Adı", "Ürün Adı", "Sipariş No", "Adet", "Hasar Durumu", "Tarih"])
-
-# --- STOK GÜNCELLEME FONKSİYONU ---
+# --- STOK GÜNCELLEME ---
 def stok_guncelle(urun_adi, adet, islem_tipi="ekle"):
     if not st.session_state.envanter.empty:
         idx = st.session_state.envanter[st.session_state.envanter["Ürün Adı"] == urun_adi].index
@@ -51,172 +76,121 @@ def stok_guncelle(urun_adi, adet, islem_tipi="ekle"):
             mevcut = int(st.session_state.envanter.at[idx, "Güncel Stok"])
             yeni = mevcut + int(adet) if islem_tipi == "ekle" else max(0, mevcut - int(adet))
             st.session_state.envanter.at[idx, "Güncel Stok"] = yeni
+            verileri_kaydet() # Değişikliği anında kaydet
             return True
     return False
 
 # --- YAN MENÜ ---
-menu = st.sidebar.selectbox("Bölümler", 
-                            ["🏠 Ana Sayfa", "📋 Envanter Bölümü", "🚚 Tedarik Bölümü", "↩️ İade Bölümü", "📈 Analiz Bölümü"])
+menu = st.sidebar.selectbox("Bölümler", ["🏠 Ana Sayfa", "📋 Envanter Bölümü", "🚚 Tedarik Bölümü", "↩️ İade Bölümü", "📈 Analiz Bölümü"])
 
-# ================= ANA SAYFA (DASHBOARD) =================
+# ================= ANA SAYFA =================
 if menu == "🏠 Ana Sayfa":
-    st.title("👋Renyap Depo Yönetimi")
+    st.title("👋Renyap Depo")
     st.markdown("### Depo Durum Özeti")
     
     toplam_cesit = len(st.session_state.envanter)
-    try:
-        toplam_stok = st.session_state.envanter["Güncel Stok"].sum()
-    except:
-        toplam_stok = 0
-        
-    son_hareket = datetime.now().strftime("%d-%m-%Y")
-
+    try: toplam_stok = st.session_state.envanter["Güncel Stok"].sum()
+    except: toplam_stok = 0
+    
     m1, m2, m3 = st.columns(3)
-    m1.metric("Toplam Ürün Çeşidi", f"{toplam_cesit} Adet", "Envanter")
-    m2.metric("Toplam Stok Miktarı", f"{toplam_stok} Adet", "Depo")
-    m3.metric("Sistem Tarihi", son_hareket)
-
-    st.markdown("---")
-    st.subheader("🚀 Modül Tanıtımları")
-
-    c1, c2 = st.columns(2)
-    with c1:
-        st.info("📋 **Envanter Bölümü**")
-        st.write("Ürün listesi, stok durumu ve excel raporlama.")
-        st.warning("🚚 **Tedarik Bölümü**")
-        st.write("Mal kabul ve otomatik stok artırma.")
-    with c2:
-        st.error("↩️ **İade Bölümü**")
-        st.write("İade kabul ve hasar kontrolü.")
-        st.success("📈 **Analiz Bölümü**")
-        st.write("Kur maliyeti ve Pazaryeri Kar/Zarar analizi.")
+    m1.metric("Toplam Ürün Çeşidi", f"{toplam_cesit} Adet")
+    m2.metric("Toplam Stok Miktarı", f"{toplam_stok} Adet")
+    m3.metric("Kayıt Sistemi", "Aktif (Excel)")
+    
+    st.info("💾 **Bilgi:** Tüm verileriniz otomatik olarak Excel dosyalarına kaydedilmektedir.")
 
 # ================= ENVANTER BÖLÜMÜ =================
 elif menu == "📋 Envanter Bölümü":
     st.header("📋 Envanter Yönetimi")
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        st.subheader("Yeni Ürün Ekle")
-        with st.form("envanter_form"):
-            u_adi = st.text_input("Ürün Adı")
-            u_kodu = st.text_input("Ürün Kodu")
-            t_blok = st.text_input("Tedarikçi Blok")
-            baslangic_stok = st.number_input("Başlangıç Stoğu", min_value=0, value=0)
-            submit = st.form_submit_button("Kaydet")
-            if submit and u_adi:
-                if u_adi in st.session_state.envanter["Ürün Adı"].values:
-                    st.error("Kayıtlı ürün!")
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        st.subheader("Yeni Ürün")
+        with st.form("inv_form"):
+            ad = st.text_input("Ürün Adı")
+            kod = st.text_input("Kod")
+            ted = st.text_input("Tedarikçi")
+            stok = st.number_input("Stok", min_value=0)
+            if st.form_submit_button("Kaydet") and ad:
+                if ad in st.session_state.envanter["Ürün Adı"].values:
+                    st.error("Mevcut!")
                 else:
-                    yeni = pd.DataFrame({"Ürün Adı": [u_adi], "Ürün Kodu": [u_kodu], "Tedarikçi Blok": [t_blok], "Güncel Stok": [baslangic_stok]})
-                    st.session_state.envanter = pd.concat([st.session_state.envanter, yeni], ignore_index=True)
-                    st.success("Eklendi.")
-    with col2:
-        st.subheader("Mevcut Liste")
+                    yen = pd.DataFrame({"Ürün Adı": [ad], "Ürün Kodu": [kod], "Tedarikçi Blok": [ted], "Güncel Stok": [stok]})
+                    st.session_state.envanter = pd.concat([st.session_state.envanter, yen], ignore_index=True)
+                    verileri_kaydet() # KAYDET
+                    st.success("Kaydedildi.")
+    with c2:
         st.dataframe(st.session_state.envanter, use_container_width=True)
-        if not st.session_state.envanter.empty:
-            st.download_button("Excel İndir", data=st.session_state.envanter.to_csv().encode('utf-8'), file_name="envanter.csv")
+        with open(FILE_ENVANTER, "rb") as f:
+            st.download_button("Excel İndir", f, file_name="envanter.csv")
 
 # ================= TEDARİK BÖLÜMÜ =================
 elif menu == "🚚 Tedarik Bölümü":
     st.header("🚚 Tedarik Girişi")
-    if st.session_state.envanter.empty:
-        st.warning("Önce Envanterden ürün ekleyin.")
+    if st.session_state.envanter.empty: st.warning("Önce ürün ekleyin.")
     else:
-        with st.form("tedarik_form"):
-            urunler = st.session_state.envanter["Ürün Adı"].unique()
-            secilen = st.selectbox("Stok Adı", urunler)
-            kod = st.session_state.envanter[st.session_state.envanter["Ürün Adı"] == secilen]["Ürün Kodu"].values[0]
-            st.text_input("Stok Kodu", value=kod, disabled=True)
+        with st.form("ted_form"):
+            urn = st.selectbox("Ürün", st.session_state.envanter["Ürün Adı"].unique())
+            kod = st.session_state.envanter[st.session_state.envanter["Ürün Adı"] == urn]["Ürün Kodu"].values[0]
+            st.text_input("Kod", value=kod, disabled=True)
             adet = st.number_input("Adet", min_value=1)
-            tedarikci = st.text_input("Tedarikçi")
-            if st.form_submit_button("Kaydet"):
-                yeni = pd.DataFrame({"Stok Adı": [secilen], "Stok Kodu": [kod], "Adet": [adet], "Tedarikçi": [tedarikci], "Tarih": [datetime.now().strftime("%Y-%m-%d")]})
+            firma = st.text_input("Firma")
+            if st.form_submit_button("Giriş Yap"):
+                yeni = pd.DataFrame({"Stok Adı": [urn], "Stok Kodu": [kod], "Adet": [adet], "Tedarikçi": [firma], "Tarih": [datetime.now().strftime("%Y-%m-%d")]})
                 st.session_state.tedarik = pd.concat([st.session_state.tedarik, yeni], ignore_index=True)
-                stok_guncelle(secilen, adet, "ekle")
-                st.success("Stok güncellendi.")
+                stok_guncelle(urn, adet, "ekle")
+                verileri_kaydet() # KAYDET
+                st.success("Stok güncellendi ve kaydedildi.")
         st.divider()
         st.dataframe(st.session_state.tedarik.sort_index(ascending=False), use_container_width=True)
 
 # ================= İADE BÖLÜMÜ =================
 elif menu == "↩️ İade Bölümü":
     st.header("↩️ İade İşlemleri")
-    if st.session_state.envanter.empty:
-        st.warning("Ürün yok.")
+    if st.session_state.envanter.empty: st.warning("Ürün yok.")
     else:
         c1, c2 = st.columns(2)
         with c1:
-            with st.form("iade_form"):
+            with st.form("iad_form"):
                 mus = st.text_input("Müşteri")
                 sip = st.text_input("Sipariş No")
-                urun = st.selectbox("Ürün", st.session_state.envanter["Ürün Adı"].unique())
+                urn = st.selectbox("Ürün", st.session_state.envanter["Ürün Adı"].unique())
                 adet = st.number_input("Adet", min_value=1)
                 hasar = st.selectbox("Durum", ["Hasarsız", "Hasarlı"])
-                stok_ekle = st.checkbox("Stoğa Ekle", value=True)
+                ekle = st.checkbox("Stoğa Ekle", value=True)
                 if st.form_submit_button("Kaydet") and mus:
-                    yeni = pd.DataFrame({"Müşteri Adı": [mus], "Ürün Adı": [urun], "Sipariş No": [sip], "Adet": [adet], "Hasar Durumu": [hasar], "Tarih": [datetime.now().strftime("%Y-%m-%d")]})
+                    yeni = pd.DataFrame({"Müşteri Adı": [mus], "Ürün Adı": [urn], "Sipariş No": [sip], "Adet": [adet], "Hasar Durumu": [hasar], "Tarih": [datetime.now().strftime("%Y-%m-%d")]})
                     st.session_state.iade = pd.concat([st.session_state.iade, yeni], ignore_index=True)
-                    if stok_ekle: stok_guncelle(urun, adet, "ekle")
-                    st.success("İade alındı.")
+                    if ekle: stok_guncelle(urn, adet, "ekle")
+                    verileri_kaydet() # KAYDET
+                    st.success("İade kaydedildi.")
         with c2:
             st.dataframe(st.session_state.iade.sort_index(ascending=False), use_container_width=True)
 
-# ================= ANALİZ BÖLÜMÜ (GÜNCELLENDİ) =================
+# ================= ANALİZ BÖLÜMÜ =================
 elif menu == "📈 Analiz Bölümü":
     st.header("📈 Hesaplama Araçları")
-    
-    # İki ayrı sekme oluşturuyoruz
-    tab1, tab2 = st.tabs(["💰 Pazaryeri Kar Analizi", "💱 Döviz Hesaplama"])
-    
-    # --- SEKME 1: PAZARYERİ ANALİZİ ---
-    with tab1:
-        st.subheader("Pazaryeri Kar/Zarar Hesaplama")
-        st.markdown("Verilen değerlere göre net karı hesaplar.")
-        
-        col_giris, col_sonuc = st.columns(2)
-        
-        with col_giris:
-            alis_fiyati = st.number_input("Alış Fiyatı (Maliyet)", min_value=0.0, value=100.0, step=1.0)
-            satis_fiyati = st.number_input("Satış Fiyatı", min_value=0.0, value=250.0, step=1.0)
-            kargo_maliyeti = st.number_input("Kargo Maliyeti", min_value=0.0, value=40.0, step=1.0)
-            iskonto_orani = st.number_input("Komisyon / İskonto Oranı (%)", min_value=0.0, max_value=100.0, value=20.0, step=0.5)
-            
-        with col_sonuc:
-            # Hesaplamalar
-            iskonto_tutari = satis_fiyati * (iskonto_orani / 100)
-            toplam_kesinti = kargo_maliyeti + iskonto_tutari
-            kalan_net_tutar = satis_fiyati - toplam_kesinti
-            net_kar = kalan_net_tutar - alis_fiyati
-            
-            # Renk belirleme (Kar ise yeşil, zarar ise kırmızı)
-            renk = "green" if net_kar > 0 else "red"
-            
-            st.write(f"📉 **Kesintiler:**")
-            st.write(f"- İskonto Tutarı: {iskonto_tutari:.2f} TL")
-            st.write(f"- Kargo Tutarı: {kargo_maliyeti:.2f} TL")
-            st.markdown("---")
-            
-            st.metric("💵 Kalan Net Tutar (Ciro)", f"{kalan_net_tutar:.2f} TL")
-            
-            st.markdown(f"""
-            <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid {renk};">
-                <h3 style="color: {renk}; margin:0;">Kalan Kar: {net_kar:.2f} TL</h3>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # --- SEKME 2: DÖVİZ HESAPLAMA (ESKİ ÖZELLİK) ---
-    with tab2:
-        st.subheader("Döviz Maliyet Çevirici")
+    t1, t2 = st.tabs(["💰 Pazaryeri Kar Analizi", "💱 Döviz Hesaplama"])
+    with t1:
         c1, c2 = st.columns(2)
         with c1:
-            kur = st.number_input("Kur", value=32.50)
-            fiyat = st.number_input("Fiyat (Döviz)", value=100.0)
-            iskonto = st.number_input("İskonto (%)", value=10.0)
+            alis = st.number_input("Alış", 100.0)
+            satis = st.number_input("Satış", 250.0)
+            kargo = st.number_input("Kargo", 40.0)
+            kom = st.number_input("Komisyon %", 20.0)
         with c2:
-            net = fiyat - (fiyat * iskonto / 100)
-            tl = net * kur
-            st.metric("Net Döviz", f"{net:.2f}")
-            st.metric("TL Karşılığı", f"{tl:,.2f} ₺")
+            kesinti = satis * (kom/100) + kargo
+            net = satis - kesinti - alis
+            color = "green" if net > 0 else "red"
+            st.metric("Ciro (Ele Geçen)", f"{satis-kesinti:.2f} TL")
+            st.markdown(f"<h3 style='color:{color}'>Net Kar: {net:.2f} TL</h3>", unsafe_allow_html=True)
+    with t2:
+        c1, c2 = st.columns(2)
+        with c1:
+            kur = st.number_input("Kur", 32.50)
+            fiyat = st.number_input("Döviz Fiyat", 100.0)
+            isk = st.number_input("İskonto %", 10.0)
+        with c2:
+            st.metric("TL Maliyet", f"{(fiyat - (fiyat*isk/100)) * kur:.2f} ₺")
 
 st.sidebar.markdown("---")
-
 st.sidebar.markdown("🌐 [www.renyap.com](https://www.renyap.com)")
