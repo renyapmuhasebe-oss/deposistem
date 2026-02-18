@@ -22,8 +22,9 @@ st.markdown("""
         }
         
         /* Sol Menüdeki Radyo Butonlarını Güzelleştirme */
-        .stRadio > div { gap: 10px; }
-        .stRadio label { font-size: 16px !important; font-weight: 500 !important; cursor: pointer; }
+        .stRadio > div { gap: 15px; } /* Butonlar arası boşluk */
+        .stRadio label { font-size: 18px !important; font-weight: 600 !important; cursor: pointer; padding: 10px; border-radius: 5px; transition: 0.3s; }
+        .stRadio label:hover { background-color: #e9ecef; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -45,6 +46,7 @@ if 'iade' not in st.session_state:
     if os.path.exists(FILE_IADE): st.session_state.iade = pd.read_excel(FILE_IADE)
     else: st.session_state.iade = pd.DataFrame(columns=["Müşteri Adı", "Ürün Adı", "Sipariş No", "Adet", "Hasar Durumu", "Tarih"])
 
+# --- KAYIT VE GÜNCELLEME FONKSİYONLARI ---
 def verileri_kaydet():
     st.session_state.envanter.to_excel(FILE_ENVANTER, index=False)
     st.session_state.tedarik.to_excel(FILE_TEDARIK, index=False)
@@ -62,27 +64,51 @@ def stok_guncelle(urun_adi, adet, islem_tipi="ekle"):
             return True
     return False
 
-# --- SOL MENÜ TASARIMI ---
+# --- LOGO VE MENÜ ---
+# Session State kullanarak sayfa yönlendirmesi yapıyoruz
+if 'sayfa' not in st.session_state:
+    st.session_state.sayfa = "🏠 Ana Sayfa"
+
+def logo_tikla():
+    st.session_state.sayfa = "🏠 Ana Sayfa"
+
 if os.path.exists("logo.jpeg"):
     try:
+        # Logoya tıklanınca ana sayfaya gitmesi için buton hilesi
         st.sidebar.image(Image.open("logo.jpeg"), use_container_width=True)
+        if st.sidebar.button("🏠 Ana Sayfaya Dön", type="primary", use_container_width=True):
+            logo_tikla()
     except: pass
 
-st.sidebar.write("---") # Çizgi
+st.sidebar.write("---") 
 
-# BURASI DEĞİŞTİ: Selectbox yerine Radio kullanıldı
+# İkonlu ve Yazılı Menü Seçenekleri
+secenekler = ["🏠 Ana Sayfa", "📋 Envanter", "🚚 Tedarik", "↩️ İade", "📈 Analiz"]
+
+# Radyo butonu seçimi (Session state ile senkronize)
+try:
+    index_no = secenekler.index(st.session_state.sayfa)
+except:
+    index_no = 0
+
 menu = st.sidebar.radio(
     "MENÜ", 
-    ["🏠 Ana Sayfa", "📋 Envanter Bölümü", "🚚 Tedarik Bölümü", "↩️ İade Bölümü", "📈 Analiz Bölümü"],
-    label_visibility="collapsed" # Başlığı gizle, sade görünsün
+    secenekler,
+    index=index_no,
+    label_visibility="collapsed"
 )
 
+# Menüden seçim yapıldığında state'i güncelle
+if menu != st.session_state.sayfa:
+    st.session_state.sayfa = menu
+    st.rerun()
+
 st.sidebar.write("---")
-st.sidebar.caption("Deposistem v2.1")
+st.sidebar.caption("Deposistem v2.2")
 st.sidebar.markdown("🌐 [www.renyap.com](https://www.renyap.com)")
 
 # ================= ANA SAYFA =================
-if menu == "🏠 Ana Sayfa":
+if st.session_state.sayfa == "🏠 Ana Sayfa":
     st.title("👋 Yönetim Paneli")
     
     toplam_cesit = len(st.session_state.envanter)
@@ -104,8 +130,8 @@ if menu == "🏠 Ana Sayfa":
         st.success("📈 **Analiz:** Kar/Zarar ve maliyet hesaplama.")
 
 # ================= ENVANTER =================
-elif menu == "📋 Envanter Bölümü":
-    st.header("📋 Envanter")
+elif st.session_state.sayfa == "📋 Envanter":
+    st.header("📋 Envanter Yönetimi")
     c1, c2 = st.columns([1, 2])
     with c1:
         st.subheader("Ürün Ekle")
@@ -126,8 +152,8 @@ elif menu == "📋 Envanter Bölümü":
         with open(FILE_ENVANTER, "rb") as f: st.download_button("Excel İndir", f, "envanter.csv")
 
 # ================= TEDARİK =================
-elif menu == "🚚 Tedarik Bölümü":
-    st.header("🚚 Tedarik")
+elif st.session_state.sayfa == "🚚 Tedarik":
+    st.header("🚚 Tedarik Girişi")
     if not st.session_state.envanter.empty:
         with st.form("ted"):
             urn = st.selectbox("Ürün", st.session_state.envanter["Ürün Adı"].unique())
@@ -145,8 +171,8 @@ elif menu == "🚚 Tedarik Bölümü":
     else: st.warning("Önce ürün ekleyin.")
 
 # ================= İADE =================
-elif menu == "↩️ İade Bölümü":
-    st.header("↩️ İade")
+elif st.session_state.sayfa == "↩️ İade":
+    st.header("↩️ İade İşlemleri")
     if not st.session_state.envanter.empty:
         c1, c2 = st.columns(2)
         with c1:
@@ -167,7 +193,7 @@ elif menu == "↩️ İade Bölümü":
     else: st.warning("Önce ürün ekleyin.")
 
 # ================= ANALİZ =================
-elif menu == "📈 Analiz Bölümü":
+elif st.session_state.sayfa == "📈 Analiz":
     st.header("📈 Analiz")
     t1, t2 = st.tabs(["💰 Pazaryeri", "💱 Döviz"])
     with t1:
