@@ -7,16 +7,29 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (MOBİL MENÜ DÜZELTİLDİ) ---
+# --- TASARIM (NOKTA ATIŞI GİZLEME) ---
 st.markdown("""
     <style>
-        /* --- GİZLEME AYARLARI (GÜNCELLENDİ) --- */
-        #MainMenu {visibility: hidden;} /* Sağ üstteki 3 nokta gizli */
-        footer {visibility: hidden;}    /* Alttaki 'Manage app' gizli */
-        .stDeployButton {display:none;} /* Deploy butonu gizli */
+        /* --- GİZLEME AYARLARI (KRİTİK GÜNCELLEME) --- */
         
-        /* DİKKAT: 'header {visibility: hidden;}' kodu SİLİNDİ. */
-        /* Bu sayede mobilde menü açma butonu (>) görünür olacak. */
+        /* 1. Sağ üstteki 3 nokta menüsünü gizle */
+        #MainMenu {visibility: hidden;}
+        
+        /* 2. Sağ üstteki 'Deploy' butonunu gizle */
+        .stDeployButton {display: none;}
+        
+        /* 3. Toolbar (Araç çubuğu) alanını gizle */
+        [data-testid="stToolbar"] {visibility: hidden;}
+        
+        /* 4. En tepedeki renkli dekorasyon çizgisini gizle */
+        [data-testid="stDecoration"] {display: none;}
+        
+        /* 5. En alttaki 'Manage app' footer yazısını gizle */
+        footer {visibility: hidden;}
+        
+        /* NOT: 'header' etiketini gizlemiyoruz! 
+           Böylece mobildeki hamburger menü (veya ok işareti) çalışmaya devam ediyor. 
+           Sadece içindeki gereksiz butonları yukarıdaki kodlarla yok ettik. */
 
         /* --- GENEL RENKLER --- */
         .stApp { background-color: #FFFFFF; }
