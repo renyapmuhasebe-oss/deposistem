@@ -7,34 +7,63 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- TASARIM (FULL BEYAZ TEMA & BEYAZ INPUTLAR) ---
+# --- RENYAP KURUMSAL RENK TASARIMI ---
 st.markdown("""
     <style>
+        /* --- RENK TANIMLARI ---
+           Lacivert: #203864 (Başlıklar)
+           Sarı:     #FFC000 (Vurgular)
+           Kırmızı:  #C00000 (Linkler)
+        */
+
         /* GENEL ARKA PLAN */
         .stApp { background-color: #FFFFFF; }
         
-        /* SIDEBAR (SOL MENÜ) */
+        /* SIDEBAR (SOL MENÜ) - BEYAZ */
         section[data-testid="stSidebar"] {
             background-color: #FFFFFF; 
             border-right: 1px solid #e5e7eb;
         }
         
-        /* YAZI RENKLERİ - SİYAH */
-        h1, h2, h3, h4, h5, h6, label, .stMarkdown, p, span, div { 
+        /* BAŞLIKLAR (H1, H2, H3) - RENYAP LACİVERTİ */
+        h1, h2, h3, h4, h5, h6 { 
+            color: #203864 !important; /* Lacivert */
+            font-weight: 700 !important;
+        }
+        
+        /* NORMAL YAZILAR - SİYAH */
+        label, .stMarkdown, p, span, div { 
             color: #000000 !important; 
         }
-        
-        /* INPUT ALANLARI (GİRİŞ KUTUCUKLARI) - BEYAZ YAPILDI */
-        .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] div {
-            background-color: #FFFFFF !important; /* Arka plan Beyaz */
-            border: 1px solid #ced4da; /* İnce Gri Çerçeve */
-            color: #000000 !important; /* Yazı Siyah */
+
+        /* --- BUTONLAR (KAYDET VB.) --- */
+        div.stButton > button {
+            background-color: #203864; /* Lacivert Zemin */
+            color: #FFFFFF !important; /* Beyaz Yazı */
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
         
-        /* Inputlara Tıklayınca Mavi Çerçeve */
+        /* Butonun Üzerine Gelince (Hover) */
+        div.stButton > button:hover {
+            background-color: #FFC000; /* Renyap Sarısı */
+            color: #203864 !important; /* Lacivert Yazı */
+            border: 1px solid #203864;
+        }
+
+        /* --- INPUT ALANLARI --- */
+        .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] div {
+            background-color: #FFFFFF !important;
+            border: 1px solid #ced4da;
+            color: #000000 !important;
+        }
+        
+        /* Inputa Tıklayınca (Focus) - Lacivert Çerçeve */
         .stTextInput input:focus, .stNumberInput input:focus {
-            border-color: #2563EB !important;
-            box-shadow: 0 0 0 1px #2563EB;
+            border-color: #203864 !important;
+            box-shadow: 0 0 0 1px #203864;
         }
 
         /* KOLONLAR (KUTULAR) */
@@ -43,16 +72,16 @@ st.markdown("""
             border-radius: 12px; 
             padding: 20px; 
             border: 1px solid #e5e7eb; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Hafif gölge */
         }
 
-        /* TABLOLAR (DATAFRAME) */
+        /* TABLOLAR */
         [data-testid="stDataFrame"] { background-color: #FFFFFF; }
 
-        /* MENÜ BUTONLARI */
+        /* --- MENÜ BUTONLARI --- */
         .stRadio label {
             background-color: #FFFFFF;
-            color: #000000 !important;
+            color: #203864 !important; /* Yazılar Lacivert */
             padding: 12px;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
@@ -61,16 +90,26 @@ st.markdown("""
             transition: all 0.2s ease;
         }
 
-        /* Hover */
+        /* Menü Hover */
         .stRadio label:hover {
-            background-color: #f3f4f6;
-            border-color: #3B82F6;
-            color: #1D4ED8 !important;
+            background-color: #FFC000; /* Sarı */
+            color: #203864 !important;
+            border-color: #203864;
             cursor: pointer;
         }
 
-        /* Linkler */
-        a { color: #2563EB !important; text-decoration: none; font-weight: bold; }
+        /* Seçili Olan Menü (Streamlit'te tam kontrol zordur ama deneriz) */
+        .stRadio div[role='radiogroup'] > label[data-baseweb="radio"] {
+             /* Standart stil */
+        }
+
+        /* LİNKLER - RENYAP KIRMIZISI */
+        a { color: #C00000 !important; text-decoration: none; font-weight: bold; }
+        
+        /* METRİKLER */
+        [data-testid="stMetricLabel"] { color: #203864 !important; }
+        [data-testid="stMetricValue"] { color: #203864 !important; }
+        
     </style>
 """, unsafe_allow_html=True)
 
@@ -121,6 +160,7 @@ if 'sayfa' not in st.session_state:
 if os.path.exists("logo.jpeg"):
     try:
         img_str = get_base64_image("logo.jpeg")
+        # Logoya tıklayınca Ana Sayfaya döner
         logo_html = f'''
         <a href="" target="_self">
             <img src="data:image/jpeg;base64,{img_str}" width="100%" style="border-radius:10px; margin-bottom:20px;">
