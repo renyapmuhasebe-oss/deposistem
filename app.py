@@ -7,81 +7,62 @@ import base64
 # --- AYARLAR ---
 st.set_page_config(page_title="Deposistem Pro", page_icon="📦", layout="wide")
 
-# --- RENYAP KURUMSAL RENK TASARIMI ---
+# --- TASARIM (GİZLEME KOMUTLARI EKLENDİ) ---
 st.markdown("""
     <style>
-        /* --- RENK TANIMLARI ---
-           Lacivert: #203864 (Başlıklar)
-           Sarı:     #FFC000 (Vurgular)
-           Kırmızı:  #C00000 (Linkler)
-        */
-
-        /* GENEL ARKA PLAN */
+        /* --- İSTENMEYEN ELEMENTLERİ GİZLEME (YENİ) --- */
+        #MainMenu {visibility: hidden;} /* Sağ üstteki 3 nokta menüsü */
+        header {visibility: hidden;}    /* En tepedeki boşluk ve Deploy butonu */
+        footer {visibility: hidden;}    /* Sağ alttaki 'Manage app' yazısı */
+        .stDeployButton {display:none;} /* Deploy butonu */
+        
+        /* --- RENYAP KURUMSAL TASARIM --- */
         .stApp { background-color: #FFFFFF; }
         
-        /* SIDEBAR (SOL MENÜ) - BEYAZ */
         section[data-testid="stSidebar"] {
             background-color: #FFFFFF; 
             border-right: 1px solid #e5e7eb;
         }
         
-        /* BAŞLIKLAR (H1, H2, H3) - RENYAP LACİVERTİ */
+        /* Başlıklar ve Yazılar */
         h1, h2, h3, h4, h5, h6 { 
-            color: #203864 !important; /* Lacivert */
+            color: #203864 !important; /* Renyap Laciverti */
             font-weight: 700 !important;
         }
-        
-        /* NORMAL YAZILAR - SİYAH */
         label, .stMarkdown, p, span, div { 
             color: #000000 !important; 
         }
 
-        /* --- BUTONLAR (KAYDET VB.) --- */
-        div.stButton > button {
-            background-color: #203864; /* Lacivert Zemin */
-            color: #FFFFFF !important; /* Beyaz Yazı */
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        
-        /* Butonun Üzerine Gelince (Hover) */
-        div.stButton > button:hover {
-            background-color: #FFC000; /* Renyap Sarısı */
-            color: #203864 !important; /* Lacivert Yazı */
-            border: 1px solid #203864;
-        }
-
-        /* --- INPUT ALANLARI --- */
+        /* Input Alanları - Beyaz */
         .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] div {
             background-color: #FFFFFF !important;
             border: 1px solid #ced4da;
             color: #000000 !important;
         }
-        
-        /* Inputa Tıklayınca (Focus) - Lacivert Çerçeve */
         .stTextInput input:focus, .stNumberInput input:focus {
             border-color: #203864 !important;
             box-shadow: 0 0 0 1px #203864;
         }
 
-        /* KOLONLAR (KUTULAR) */
-        div[data-testid="column"] {
-            background-color: #FFFFFF; 
-            border-radius: 12px; 
-            padding: 20px; 
-            border: 1px solid #e5e7eb; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Hafif gölge */
+        /* Butonlar */
+        div.stButton > button {
+            background-color: #203864;
+            color: #FFFFFF !important;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        div.stButton > button:hover {
+            background-color: #FFC000; /* Renyap Sarısı */
+            color: #203864 !important;
+            border: 1px solid #203864;
         }
 
-        /* TABLOLAR */
-        [data-testid="stDataFrame"] { background-color: #FFFFFF; }
-
-        /* --- MENÜ BUTONLARI --- */
+        /* Menü Butonları */
         .stRadio label {
             background-color: #FFFFFF;
-            color: #203864 !important; /* Yazılar Lacivert */
+            color: #203864 !important;
             padding: 12px;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
@@ -89,27 +70,32 @@ st.markdown("""
             font-weight: 600 !important;
             transition: all 0.2s ease;
         }
-
-        /* Menü Hover */
         .stRadio label:hover {
-            background-color: #FFC000; /* Sarı */
+            background-color: #FFC000;
             color: #203864 !important;
             border-color: #203864;
             cursor: pointer;
         }
 
-        /* Seçili Olan Menü (Streamlit'te tam kontrol zordur ama deneriz) */
-        .stRadio div[role='radiogroup'] > label[data-baseweb="radio"] {
-             /* Standart stil */
+        /* Tablolar ve Kartlar */
+        [data-testid="stDataFrame"] { background-color: #FFFFFF; }
+        div[data-testid="column"] {
+            background-color: #FFFFFF; 
+            border-radius: 12px; 
+            padding: 20px; 
+            border: 1px solid #e5e7eb; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* LİNKLER - RENYAP KIRMIZISI */
+        /* Linkler ve Metrikler */
         a { color: #C00000 !important; text-decoration: none; font-weight: bold; }
-        
-        /* METRİKLER */
         [data-testid="stMetricLabel"] { color: #203864 !important; }
         [data-testid="stMetricValue"] { color: #203864 !important; }
-        
+
+        /* Üst boşluğu azalt (Header gidince boşluk kalmasın) */
+        .block-container {
+            padding-top: 1rem;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -131,7 +117,7 @@ if 'iade' not in st.session_state:
     if os.path.exists(FILE_IADE): st.session_state.iade = pd.read_excel(FILE_IADE)
     else: st.session_state.iade = pd.DataFrame(columns=["Müşteri Adı", "Ürün Adı", "Sipariş No", "Adet", "Hasar Durumu", "Tarih"])
 
-# --- KAYIT VE FONKSİYONLAR ---
+# --- KAYIT FONKSİYONLARI ---
 def verileri_kaydet():
     st.session_state.envanter.to_excel(FILE_ENVANTER, index=False)
     st.session_state.tedarik.to_excel(FILE_TEDARIK, index=False)
@@ -149,7 +135,7 @@ def stok_guncelle(urun_adi, adet, islem_tipi="ekle"):
             return True
     return False
 
-# --- LOGO İŞLEMLERİ ---
+# --- LOGO (TIKLANABİLİR) ---
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
@@ -160,7 +146,6 @@ if 'sayfa' not in st.session_state:
 if os.path.exists("logo.jpeg"):
     try:
         img_str = get_base64_image("logo.jpeg")
-        # Logoya tıklayınca Ana Sayfaya döner
         logo_html = f'''
         <a href="" target="_self">
             <img src="data:image/jpeg;base64,{img_str}" width="100%" style="border-radius:10px; margin-bottom:20px;">
@@ -170,7 +155,7 @@ if os.path.exists("logo.jpeg"):
     except:
         st.sidebar.warning("Logo Hatası")
 
-# MENÜ SEÇENEKLERİ
+# --- MENÜ ---
 secenekler = ["🏠 Ana Sayfa", "📋 Envanter", "🚚 Tedarik", "↩️ İade", "📈 Analiz"]
 
 try: index_no = secenekler.index(st.session_state.sayfa)
